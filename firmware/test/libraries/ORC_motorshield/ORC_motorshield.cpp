@@ -3,7 +3,12 @@
 // ##  ----------------------------                             ##
 // ##  Code for ORC-KIT's MotorShield driver.                   ##
 // ##                                                           ##
+// ## Part of the ORC-Kit project.                              ##
+// ##                                                           ##
 // ## History:                                                  ##
+// ##  ----------------------------                             ##
+// ## - 2016/10/09 Elias Zacarias                               ##
+// ##     Released on GitHub.                                   ##
 // ##  ----------------------------                             ##
 // ## - 2016/04/10 Elias Zacarias                               ##
 // ##     First released version.                               ##

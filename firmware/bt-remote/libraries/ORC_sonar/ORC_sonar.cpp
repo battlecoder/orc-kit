@@ -1,3 +1,20 @@
+// ###############################################################
+// ##  ORC_sonar.cpp:                                           ##
+// ##  ----------------------------                             ##
+// ##  Code for ORC-KIT's Sonar HC-SR04 (and similar) driver.   ##
+// ##                                                           ##
+// ## Part of the ORC-Kit project.                              ##
+// ##                                                           ##
+// ## History:                                                  ##
+// ##  ----------------------------                             ##
+// ## - 2016/10/09 Elias Zacarias                               ##
+// ##     Released on GitHub.                                   ##
+// ##  ----------------------------                             ##
+// ## - 2016/04/10 Elias Zacarias                               ##
+// ##     First released version.                               ##
+// ##  ----------------------------                             ##
+// ##                                                           ##
+// ###############################################################
 #include "ORC_sonar.h"
 
 
@@ -42,9 +59,10 @@ unsigned long Sonar::readSonarEchoTime(){
   delayMicroseconds(10);
   digitalWrite(triggerPin, LOW);
 
-  // We could use pulseIn for the following part, but doing this by ourselves
-  // allows us to have a max period of time we are willing to wait, before giving up
-  // which will make us waste less time.
+  // We could use pulseIn for detecting response time, but doing this
+  // manually allows us to have a customizable timeout period, which
+  // will mean not wasting much time if the signal never returns.
+
   // Wait for the echo pin to go HIGH.
   start_t = micros();
   do{
