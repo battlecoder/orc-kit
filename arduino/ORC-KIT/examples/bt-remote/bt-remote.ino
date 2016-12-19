@@ -1,7 +1,7 @@
 #include <Servo.h>
-#include "libraries/ORC_sonar/ORC_sonar.h"
-#include "libraries/ORC_radioctl/ORC_radioctl.h"
-#include "libraries/ORC_motorshield/ORC_motorshield.h"
+#include <ORC_sonar.h>
+#include <ORC_radioctl.h>
+#include <ORC_motorshield.h>
 
 // Extra hardware pin assignments ------------------------
 #define SONAR_TRIGGER_PIN   A0
@@ -12,11 +12,12 @@
 #define MAX_SPEED          255  // This is the max speed supported by the framework. Don't change.
 
 // Global variables and objects --------------------------
-Sonar       sonar1(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
-byte        currentLeftSpeed;
-byte        currentRightSpeed;
-Motor_Cmd   currentLeftCmd;
-Motor_Cmd   currentRightCmd;
+Sonar                   sonar1(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
+byte                    currentLeftSpeed;
+byte                    currentRightSpeed;
+Motor_Cmd               currentLeftCmd;
+Motor_Cmd               currentRightCmd;
+ORCKITMotorController   MotorController;
 // ###############################################################
 // ##                                                           ##
 // ##   H I G H - L E V E L   S O N A R   F U N C T I O N S     ##
@@ -24,22 +25,22 @@ Motor_Cmd   currentRightCmd;
 // ###############################################################
 // moveSonarToAngle --------------------------------------
 //  Moves the sonar servo to a given angle.
-//  Make sure the sonar servo is connected to servo_1 in
-//  the Shield.
+//  Make sure the sonar servo is connected to the first
+//  servo output of the motor controller.
 // -------------------------------------------------------
 void moveSonarToAngle (byte angle) {
-  MotorShield.servo1.write (angle);
+  MotorController.servo1.write (angle);
 }
 
 // readSonarInCms ----------------------------------------
-//  obtains the current sonar reading in cms.
+//  Obtains the current sonar reading in cms.
 // -------------------------------------------------------
 int readSonarInCms () {
   return sonar1.readSonarInCms();
 }
 
 // readSonarInInches -------------------------------------
-//  obtains the current sonar reading in inches.
+//  Obtains the current sonar reading in inches.
 // -------------------------------------------------------
 int readSonarInInches () {
   return sonar1.readSonarInInches();
@@ -55,8 +56,8 @@ int readSonarInInches () {
 // -------------------------------------------------------
 void setRightSideSpeed (byte speed) {
   if (currentRightSpeed == speed) return;
-  MotorShield.setMotorSpeed(MOTOR_2, speed);
-  MotorShield.setMotorSpeed(MOTOR_3, speed);
+  MotorController.setMotorSpeed(MOTOR_2, speed);
+  MotorController.setMotorSpeed(MOTOR_3, speed);
   currentRightSpeed = speed;
 }
 
@@ -65,14 +66,14 @@ void setRightSideSpeed (byte speed) {
 // -------------------------------------------------------
 void setLeftSideSpeed (byte speed) {
   if (currentLeftSpeed == speed) return;
-  MotorShield.setMotorSpeed(MOTOR_1, speed);
-  MotorShield.setMotorSpeed(MOTOR_4, speed);
+  MotorController.setMotorSpeed(MOTOR_1, speed);
+  MotorController.setMotorSpeed(MOTOR_4, speed);
   currentLeftSpeed = speed;
 }
 
 // setRightSideMovement ----------------------------------
 //  Sends a given command to the RIGHT-side motors.
-//  Available commands (declared in ORC_motorshield.h)
+//  Available commands (declared in ORC_motorbase.h)
 //  are:
 //    MOTOR_STOP
 //    MOTOR_FWD
@@ -80,14 +81,14 @@ void setLeftSideSpeed (byte speed) {
 // -------------------------------------------------------
 void setRightSideMovement (Motor_Cmd command) {
   if (currentRightCmd == command) return;
-  MotorShield.setMotorCommand(MOTOR_2, command);
-  MotorShield.setMotorCommand(MOTOR_3, command);
+  MotorController.setMotorCommand(MOTOR_2, command);
+  MotorController.setMotorCommand(MOTOR_3, command);
   currentRightCmd = command;
 }
 
 // setLeftSideMovement -----------------------------------
 //  Sends a given command to the LEFT-side motors.
-//  Available commands (declared in ORC_motorshield.h)
+//  Available commands (declared in ORC_motorbase.h)
 //  are:
 //    MOTOR_STOP
 //    MOTOR_FWD
@@ -95,13 +96,13 @@ void setRightSideMovement (Motor_Cmd command) {
 // -------------------------------------------------------
 void setLeftSideMovement (Motor_Cmd command) {
   if (currentLeftCmd == command) return;
-  MotorShield.setMotorCommand(MOTOR_1, command);
-  MotorShield.setMotorCommand(MOTOR_4, command);
+  MotorController.setMotorCommand(MOTOR_1, command);
+  MotorController.setMotorCommand(MOTOR_4, command);
   currentLeftCmd = command;
 }
 
 // spinRight ---------------------------------------------
-// Spins clockwise at a given speed.
+// Spins the robot clockwise at a given speed.
 // -------------------------------------------------------
 void spinRight (byte spinSpeed) {
   setLeftSideMovement (MOTOR_FWD);
@@ -111,7 +112,7 @@ void spinRight (byte spinSpeed) {
 }
 
 // spinLeft ----------------------------------------------
-// Spins counter-clockwise at a given speed.
+// Spins the robot counter-clockwise at a given speed.
 // -------------------------------------------------------
 void spinLeft (byte spinSpeed) {
   setLeftSideMovement (MOTOR_BACK);
@@ -157,8 +158,8 @@ void forward (byte leftSpeed, byte rightSpeed) {
 // ##                                                           ##
 // ###############################################################
 // setup -------------------------------------------------
-//  When the Arduino "boots", this function will be called
-//  once, so this is the perfect place to configure stuff before
+//  When the Arduino "boots", this function is called once
+//  so this is the perfect place to configure stuff before
 //  we do anything. After this procedure ends, Arduino
 //  will start running our loop() function until the board
 //  is turned off (or resets).
@@ -166,19 +167,49 @@ void forward (byte leftSpeed, byte rightSpeed) {
 void setup() {
   // Serial radio link
   ORCRadioControl.begin(9600);
-  
+
+  // Must be called during setup
+  MotorController.init();
+
   // "Attach" servos, so we can use them.
-  MotorShield.attachServos();
+  MotorController.attachServos();
 
   // Default sonar head position:
   moveSonarToAngle (90);
+
+  // set a max distance for the sonar, so we won't waste precious time
+  // waiting for the signal to return.
+  sonar1.setMaxRangeInCms (40);
 }
 
+unsigned long lastSonarReadingTime = 0;
+unsigned int accumulatedSonar = 0;
+unsigned char accSonarCount = 0;
+int sonarReading = 0;
 // loop --------------------------------------------------
-//  This procedure be executed for as long as the Arduino
-//  board is powered.
+//  This procedure will be executed after setup() and 
+//  will loop as long as the arduino board is powered.
 // -------------------------------------------------------
 void loop(){
+  unsigned long rightNow = millis();
+  int newRead;
+
+  // Read the Sonar each 100ms
+  if (lastSonarReadingTime - rightNow >= 100){
+    newRead = readSonarInCms();
+    // Ignore zero readings. They are normally timeouts.
+    if (newRead != 0){
+      accumulatedSonar += newRead;
+      accSonarCount++;
+      sonarReading = accumulatedSonar / accSonarCount;
+      // Reset after 16 reads
+      if (accSonarCount >= 16){
+        accumulatedSonar = sonarReading;
+        accSonarCount = 1;
+      }
+    }
+    lastSonarReadingTime = rightNow;
+  }
   // readAndParse() returns true when a new data packet has been processed and we can query the
   // new values for X, Y and buttons. We will use this event to update what our motors are doing.
   if (ORCRadioControl.readAndParse()){
@@ -223,10 +254,9 @@ void loop(){
 
         // Otherwise we want to go forward ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }else {
-          // Let's check what the sonar says before moving forward. If there's an obstacle near
-          // we actually want to stop.
-          //if (readSonarInCms() < 25){
-          if (false){
+          // The robot will stop if it encounters an obstacle. This behavior can be cancelled
+          // by pressing the first button on the controller app.
+          if (sonarReading < 25 && !(ORCRadioControl.getButtonPressed(0))){
             motorsOff();
 
           // Which side is dominant depends on whether we are pushing the X stick left or right
@@ -238,11 +268,27 @@ void loop(){
         }
       }
     }
-    ORCRadioControl.send(ORCRadioControl.getCurrentX(), DEC);
-    ORCRadioControl.send(' ');
-    ORCRadioControl.send(ORCRadioControl.getCurrentY(), DEC);
-    ORCRadioControl.send(' ');
-    ORCRadioControl.sendDataEnd();
+    // NOTE:
+    // Sending data takes time, so I'd advise you to configure your bluetooth module at a higher
+    // speed (57600 bps is a good choice) if you don't want the code below to make your robot less
+    // responsive. Check online for the way you can configure the baudrate of your bluetooth module
+    // and then update the call to ORCRadioControl.begin() in the setup() method of this sketch.
+    ORCRadioControl.setCursor (0, 0);
+    ORCRadioControl.write("SONAR: ");
+    ORCRadioControl.write(sonarReading, DEC);
+    ORCRadioControl.write("cm");
+    ORCRadioControl.setCursor (0, 1);
+    ORCRadioControl.write("STICK: ");
+    ORCRadioControl.write(ORCRadioControl.getCurrentX(), DEC);
+    ORCRadioControl.write(", ");
+    ORCRadioControl.write(ORCRadioControl.getCurrentY(), DEC);
+    ORCRadioControl.setCursor (0, 2);
+    ORCRadioControl.write("SPEEDl:");
+    ORCRadioControl.write(currentLeftSpeed, DEC);
+    ORCRadioControl.setCursor (0, 3);
+    ORCRadioControl.write("SPEEDr:");
+    ORCRadioControl.write(currentRightSpeed, DEC);
+    ORCRadioControl.sendData();
   }
 }
 

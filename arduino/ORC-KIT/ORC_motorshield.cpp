@@ -1,11 +1,15 @@
 // ###############################################################
 // ##  ORC_motorshield.cpp:                                     ##
 // ##  ----------------------------                             ##
-// ##  Code for ORC-KIT's MotorShield driver.                   ##
+// ##  Code for ORC-KIT's driver for Adafruit's motorshield,    ##
 // ##                                                           ##
 // ## Part of the ORC-Kit project.                              ##
 // ##                                                           ##
 // ## History:                                                  ##
+// ##  ----------------------------                             ##
+// ## - 2016/12/19 Elias Zacarias                               ##
+// ##     Minor adaptations to create a version compatible with ##
+// ##     standalone H-bridges.                                 ##
 // ##  ----------------------------                             ##
 // ## - 2016/10/09 Elias Zacarias                               ##
 // ##     Released on GitHub.                                   ##
@@ -16,14 +20,13 @@
 // ##                                                           ##
 // ###############################################################
 #include "ORC_motorshield.h"
-#include "Arduino.h"
 
 // ###############################################################
 // ##                                                           ##
 // ##               L O C A L  C O N S T A N T S                ##
 // ##                                                           ##
 // ###############################################################
-// Bit positions in the 74HCT595 shift register
+// Bit positions of motor flags in the motor register
 #define MOTOR1_A 2
 #define MOTOR1_B 3
 #define MOTOR2_A 1
@@ -40,9 +43,6 @@
 // ###############################################################
 static byte    motorData;
 static byte    motorboard_initd = 0;
-
-MotorShieldDrv MotorShield;
-
 
 // ###############################################################
 // ##                                                           ##
@@ -67,8 +67,6 @@ void MotorShieldDrv::setMotorSpeed (Motor_Index motor, byte mspeed){
 }
 
 void MotorShieldDrv::setMotorCommand (Motor_Index motor, Motor_Cmd command){
-  byte bitPosA;
-  byte bitPosB;
   boolean aVal = LOW;
   boolean bVal = LOW;
 
@@ -81,6 +79,7 @@ void MotorShieldDrv::setMotorCommand (Motor_Index motor, Motor_Cmd command){
   }
 
   bitWrite (PORTD, 7, LOW); //Enable PIN
+
   switch (motor) {
     case MOTOR_1:
       bitWrite (motorData, MOTOR1_A, aVal);
@@ -101,30 +100,32 @@ void MotorShieldDrv::setMotorCommand (Motor_Index motor, Motor_Cmd command){
     default:
       return;
   }
- 
+
   digitalWrite (MTRCTL_LATCH, LOW);
   shiftOut(MTRCTL_DATA, MTRCTL_CLK, MSBFIRST, motorData);
   digitalWrite (MTRCTL_LATCH, HIGH);
 }
 
 void MotorShieldDrv::attachServos(){
-  servo1.attach(MTRCTL_SERVO1);
-  servo2.attach(MTRCTL_SERVO2);
+  servo1.attach (MTRCTL_SERVO1);
+  servo2.attach (MTRCTL_SERVO2);
 }
 
+
 // Init routine
-MotorShieldDrv::MotorShieldDrv() {
+void MotorShieldDrv::init() {
   if (motorboard_initd) return;
   motorboard_initd = 1;
-  pinMode (MTRCTL_LATCH, OUTPUT);
-  pinMode (MTRCTL_ENABLE, OUTPUT);
-  pinMode (MTRCTL_DATA, OUTPUT);
-  pinMode (MTRCTL_CLK, OUTPUT);
+
+  pinMode (MTRCTL_LATCH,   OUTPUT);
+  pinMode (MTRCTL_ENABLE,  OUTPUT);
+  pinMode (MTRCTL_DATA,    OUTPUT);
+  pinMode (MTRCTL_CLK,     OUTPUT);
   
-  pinMode (MTRCTL_M1PWM, OUTPUT);
-  pinMode (MTRCTL_M2PWM, OUTPUT);
-  pinMode (MTRCTL_M3PWM, OUTPUT);
-  pinMode (MTRCTL_M4PWM, OUTPUT);
+  pinMode (MTRCTL_M1PWM,   OUTPUT);
+  pinMode (MTRCTL_M2PWM,   OUTPUT);
+  pinMode (MTRCTL_M3PWM,   OUTPUT);
+  pinMode (MTRCTL_M4PWM,   OUTPUT);
 
   setMotorCommand(MOTOR_1, MOTOR_STOP);
   setMotorCommand(MOTOR_2, MOTOR_STOP);

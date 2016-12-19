@@ -4,9 +4,14 @@
 // ##  ----------------------------                             ##
 // ##  Code for ORC-KIT's Radio control Example.                ##
 // ##                                                           ##
-// ## Part of the ORC-Kit project.                              ##
+// ##  Part of the ORC-Kit project.                             ##
 // ##                                                           ##
 // ## History:                                                  ##
+// ##  ----------------------------                             ##
+// ## - 2016/12/15 Elias Zacarias                               ##
+// ##     Data sending functions renamed for consistency with   ##
+// ##     other similar APIs. setCursor() function added.       ##
+// ##     Changed baud data type so it supports higher values.  ##
 // ##  ----------------------------                             ##
 // ## - 2016/10/09 Elias Zacarias                               ##
 // ##     Released on GitHub.                                   ##
@@ -44,35 +49,43 @@ char hexNibbleToDec(byte hexNibble) {
 // ##                 C L A S S   M E T H O D S                 ##
 // ##                                                           ##
 // ###############################################################
-void ORCRadioControlClass::begin(int baud) {
+void ORCRadioControlClass::begin(long baud) {
   Serial.begin (baud);
 }
 
-void ORCRadioControlClass::send(const char *str) {
+void ORCRadioControlClass::write(const char *str) {
   Serial.print(str);
 }
 
-void ORCRadioControlClass::send(const String s) {
+void ORCRadioControlClass::write(const String s) {
   Serial.print(s);
 }
 
-void ORCRadioControlClass::send(char c) {
+void ORCRadioControlClass::write(char c) {
   Serial.print(c);
 }
 
-void ORCRadioControlClass::send(int num, int fmt) {
+void ORCRadioControlClass::setCursor(byte x, byte y){
+  Serial.write(17);
+  Serial.write((x % RECV_SCREEN_W) + 'A');
+  Serial.write(18);
+  Serial.write((y % RECV_SCREEN_H) + 'A');
+}
+
+
+void ORCRadioControlClass::write(int num, int fmt) {
   Serial.print(num, fmt);
 }
 
-void ORCRadioControlClass::send(long num, int fmt) {
+void ORCRadioControlClass::write(long num, int fmt) {
   Serial.print(num, fmt);
 }
 
-void ORCRadioControlClass::send(double num, int fmt) {
+void ORCRadioControlClass::write(double num, int fmt) {
   Serial.print(num, fmt);
 }
 
-void ORCRadioControlClass::sendDataEnd() {
+void ORCRadioControlClass::sendData() {
   Serial.println("");
 }
 

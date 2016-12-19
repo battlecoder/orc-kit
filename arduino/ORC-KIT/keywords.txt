@@ -1,0 +1,29 @@
+ORCKITMotorController	KEYWORD1
+setMotorSpeed			KEYWORD2
+attachServos			KEYWORD2
+setMotorSpeed			KEYWORD2
+setMotorCommand			KEYWORD2
+
+ORCRadioControl			KEYWORD1
+setCursor				KEYWORD2
+readAndParse			KEYWORD2
+getCurrentX				KEYWORD2
+getCurrentY				KEYWORD2
+getButtonPressed		KEYWORD2
+sendData				KEYWORD2
+
+Sonar					KEYWORD1
+readSonarInCms			KEYWORD2
+readSonarInInches		KEYWORD2
+setMaxRangeInCms		KEYWORD2
+setMaxRangeInInches		KEYWORD2
+readSonarEchoTime		KEYWORD2
+setParameters			KEYWORD2
+
+MOTOR_1					LITERAL1
+MOTOR_2					LITERAL1
+MOTOR_3					LITERAL1
+MOTOR_4					LITERAL1
+MOTOR_STOP				LITERAL1
+MOTOR_FWD				LITERAL1
+MOTOR_BACK				LITERAL1

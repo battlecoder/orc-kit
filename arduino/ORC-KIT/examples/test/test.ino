@@ -1,14 +1,13 @@
-#include <Servo.h>
-#include "libraries/ORC_sonar/ORC_sonar.h"
-#include "libraries/ORC_motorshield/ORC_motorshield.h"
+#include <ORC_motorshield.h>
+#include <ORC_sonar.h>
 
 // Extra hardware pin assignments ------------------------
 #define SONAR_TRIGGER_PIN   A0
 #define SONAR_ECHO_PIN      A1
 
 // Global variables and objects --------------------------
-Sonar       sonar1(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
-
+Sonar                   sonar1(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
+ORCKITMotorController   MotorController;
 // ###############################################################
 // ##                                                           ##
 // ##   H I G H - L E V E L   M O T O R   F U N C T I O N S     ##
@@ -16,17 +15,17 @@ Sonar       sonar1(SONAR_TRIGGER_PIN, SONAR_ECHO_PIN);
 // ###############################################################
 // setMotors ---------------------------------------------
 //  Sends a given command to all motors.
-//  Available commands (declared in ORC_motorshield.h)
+//  Available commands (declared in ORC_motorbase.h)
 //  are:
 //    MOTOR_STOP
 //    MOTOR_FWD
 //    MOTOR_BACK
 // -------------------------------------------------------
 void setMotors (Motor_Cmd command) {
-  MotorShield.setMotorCommand(MOTOR_1, command);
-  MotorShield.setMotorCommand(MOTOR_2, command);
-  MotorShield.setMotorCommand(MOTOR_3, command);
-  MotorShield.setMotorCommand(MOTOR_4, command);
+  MotorController.setMotorCommand(MOTOR_1, command);
+  MotorController.setMotorCommand(MOTOR_2, command);
+  MotorController.setMotorCommand(MOTOR_3, command);
+  MotorController.setMotorCommand(MOTOR_4, command);
 }
 
 // ###############################################################
@@ -35,8 +34,8 @@ void setMotors (Motor_Cmd command) {
 // ##                                                           ##
 // ###############################################################
 // setup -------------------------------------------------
-//  When the Arduino "boots", this function will be called
-//  once, so this is the perfect place to configure stuff before
+//  When the Arduino "boots", this function is called once
+//  so this is the perfect place to configure stuff before
 //  we do anything. After this procedure ends, Arduino
 //  will start running our loop() function until the board
 //  is turned off (or resets).
@@ -46,20 +45,23 @@ void setup() {
   // to the computer while the robot runs
   Serial.begin(9600);
 
+  // Must be called during setup
+  MotorController.init();
+
   // "Attach" servos, so we can use them.
-  MotorShield.attachServos();
+  MotorController.attachServos();
 
-  // Move the servo1 (where the sonar should be mounted) to 90°,
-  // so it faces forward)
-  MotorShield.servo1.write (90);
+  // Move servo1 (where the sonar should be mounted) to 90°,
+  // so it faces forward
+  MotorController.servo1.write (90);
 
-  // Set the motors to "forward" motion.
+  // Set the motors to "forward".
   setMotors (MOTOR_FWD);
 }
 
 // loop --------------------------------------------------
-//  This procedure be executed for as long as the Arduino
-//  board is powered.
+//  This procedure will be executed after setup() and 
+//  will loop as long as the arduino board is powered.
 // -------------------------------------------------------
 void loop() {
   Serial.print("SONAR: ");
